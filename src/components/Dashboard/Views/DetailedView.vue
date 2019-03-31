@@ -1,6 +1,34 @@
 <template>
   <div>
-
+    <label>지역선택</label>
+    <select v-model= "areaData.guCode">
+    <option v-for="(area, index) in guCode" :key="index">{{area}}</option>
+    </select>
+    <label>연도</label>
+    <select v-model= "areaData.targetYear">
+    <option v-for="(area, index) in targetYear" :key="index">{{area}}</option>
+    </select>
+    <label>월</label>
+    <select v-model= "areaData.targetMonth">
+      <option v-for="(area, index) in targetMonth" :key="index">{{area}}</option>
+    </select>
+    <button v-on:click="retrieveAreaData();retrieveMonthData()">Search</button>
+    <p>지역선택: {{areaData.guCode}} 연도: {{areaData.targetYear}} 월: {{areaData.targetMonth}}</p>
+    <p>최대값: {{areaData.maxPrice}} 최소값: {{areaData.minPrice}} 거래건수: {{areaData.trxnAmount}}</p>
+    <div>
+            <h4>Search Result</h4>
+            <ul>
+             <!-- <li v-for="(a, index) in allAreaData" :key="index">            
+                            (전체)지역명: {{a.areaNm}} 인구수: {{a.population}} 해당월: {{a.targetMonth}}
+                </li>-->
+                <li>            
+                 (개별)지역명: {{areaData.areaNm}} 인구수: {{areaData.population}}                            
+                </li>
+                <li v-for="(data, index) in monthData" :key="index">            
+                 index: {{index}} 월: {{data.targetMonth}} 평균값: {{data.avgPrice}}
+                </li>
+            </ul>
+        </div>  
     <!--Stats cards-->
     <div class="row">
       <div class="col-lg-3 col-sm-6" v-for="stats in statsCards">
@@ -68,14 +96,23 @@
       </div>
     </div>
 
-  </div>
+  
 
+      <div class="list row">
+           
+      
+        <div class="col-md-6">
+            <router-view @refreshData="refreshList"></router-view>
+        </div>
+    </div>
 
+</div>
 </template>
 <script>
   import StatsCard from 'components/UIComponents/Cards/StatsCard.vue'
   import ChartCard from 'components/UIComponents/Cards/ChartCard.vue'
   import PaperTable from 'components/UIComponents/PaperTable.vue'
+  import http from "src/http-common"
 
   const tableColumns = ['Location', 'Name', 'Price', 'SQM', 'Floor']
   const tableData = [
@@ -105,8 +142,15 @@
     /**
      * Chart data used to render stats, charts. Should be replaced with server data
      */
-    data () {
+    data() {
       return {
+        guCode: ['11110'],
+        targetYear: ['2017', '2018'],
+        targetMonth: ['7','8','9'],
+        //population: '100',
+       // allAreaData : [],
+        areaData: {},
+        monthData: [],
         statsCards: [
           {
             type: 'info',
@@ -133,7 +177,7 @@
             type: 'info',
             icon: 'ti-user',
             title: 'Population',
-            value: 'xxxxx명',
+            value: 'xx명',
             footerText: '<<search period>>'
           }
         ],
@@ -172,10 +216,57 @@
           columns: [...tableColumns],
           data: [...tableData]
         }
-
       }
-    }
+    },
+     methods: {
+   /* retrieveAllAreaData() {
+      http
+        .get("/admin/detail/allAreaData")
+        .then(response => {
+          this.allAreaData = response.data; 
+          console.log(response.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },*/
+     refreshList() {
+     // this.retrieveAllAreaData();
+    },
+  retrieveAreaData: function() { //areainfo 조회, 구코드, 연도, 월로 조회
+    http
+        .post("/admin/detail/areainfo", {
+          guCode: this.areaData.guCode,
+          targetYear: this.areaData.targetYear,
+          targetMonth: this.areaData.targetMonth
+        })
+        .then(response => {
+          this.areaData = response.data; 
+          console.log(response.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+       },
+     retrieveMonthData: function() { //mdata 조회, 구코드, 연도로 조회
+    http
+        .post("/admin/detail/mdata", {
+          guCode: this.areaData.guCode,
+          targetYear:this.areaData.targetYear
+        })
+        .then(response => {
+          this.monthData = response.data; 
+          console.log(response.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+       }
+  },
+  mounted() {
+   // this.retrieveAllAreaData();
   }
+}
 
 </script>
 <style>
