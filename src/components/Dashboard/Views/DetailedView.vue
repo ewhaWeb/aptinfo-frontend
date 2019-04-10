@@ -12,7 +12,7 @@
     <select v-model= "areaData.targetMonth">
       <option v-for="(area, index) in targetMonth" :key="index">{{area}}</option>
     </select>
-    <button v-on:click="retrieveAreaData();retrieveMonthData()">Search</button>
+    <button v-on:click="retrieveMonthData()">Search</button>
     <p>지역선택: {{areaData.guCode}} 연도: {{areaData.targetYear}} 월: {{areaData.targetMonth}}</p>
     <p>최대값: {{areaData.maxPrice}} 최소값: {{areaData.minPrice}} 거래건수: {{areaData.trxnAmount}}</p>
     <div>
@@ -38,7 +38,7 @@
           </div>
           <div class="numbers" slot="content">
             <p>{{stats.title}}</p>
-            {{stats.value}}
+            {{values.areaData.maxPrice}}
           </div>
           <div class="stats" slot="footer">
             <i :class="stats.footerIcon"></i> {{stats.footerText}}
@@ -149,7 +149,12 @@
         targetMonth: ['7','8','9'],
         //population: '100',
        // allAreaData : [],
-        areaData: {},
+        areaData: {
+          // 초기화값
+          "guCode" : "11110",
+          "targetYear" : "2017",
+          "targetMonth" : "7"
+        },
         monthData: [],
         statsCards: [
           {
@@ -181,6 +186,8 @@
             footerText: '<<search period>>'
           }
         ],
+        values : this.areaData
+        ,
         activityChart: {
           data: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -235,11 +242,10 @@
     },
   retrieveAreaData: function() { //areainfo 조회, 구코드, 연도, 월로 조회
     http
-        .post("/admin/detail/areainfo", {
-          guCode: this.areaData.guCode,
-          targetYear: this.areaData.targetYear,
-          targetMonth: this.areaData.targetMonth
-        })
+        .get("/admin/detail/areainfo/" 
+        + this.areaData.guCode +"/"
+        + this.areaData.targetYear +"/"
+        + this.areaData.targetMonth)
         .then(response => {
           this.areaData = response.data; 
           console.log(response.data);
@@ -250,10 +256,9 @@
        },
      retrieveMonthData: function() { //mdata 조회, 구코드, 연도로 조회
     http
-        .post("/admin/detail/mdata", {
-          guCode: this.areaData.guCode,
-          targetYear:this.areaData.targetYear
-        })
+        .get("/admin/detail/mdata/" +
+         this.areaData.guCode + "/" +this.areaData.targetYear
+        )
         .then(response => {
           this.monthData = response.data; 
           console.log(response.data);
@@ -263,8 +268,9 @@
         });
        }
   },
-  mounted() {
+  beforeMount() {
    // this.retrieveAllAreaData();
+  this.retrieveAreaData();
   }
 }
 
